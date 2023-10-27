@@ -19,7 +19,7 @@ const Design = () => {
         init={particlesInit}
         loaded={particlesLoaded}
         options={{
-          fullScreen: false,
+          fullScreen: true,
           background: {
             // color: {
             //   value: "#0d47a1",
@@ -79,7 +79,7 @@ const Design = () => {
                 enable: true,
                 area: 1200,
               },
-              value: 80,
+              value: 100,
             },
             opacity: {
               value: 0.5,

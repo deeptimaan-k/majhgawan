@@ -8,7 +8,6 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import { debounce } from 'lodash';
 import Swal from "sweetalert2";
-
 const Form = () => {
   const formRef = useRef();
   const [formData, setFormData] = useState({
@@ -29,16 +28,27 @@ const Form = () => {
     StrugglingStudentsClass3: '',
   });
   const [loading, setLoading] = useState(false);
-
+  const [date, setDate] = useState('');
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  useEffect(() => {
+    // Make a GET request to fetch the date from the Google Apps Script web app
+    fetch('https://script.google.com/macros/s/AKfycbwQ7IGod42FO8O-6VzbPK57Xzlc1JeRRDGntTNkuHbXApapKV2YY3ZEfA2HXGC19PXZ/exec')
+      .then((response) => response.text())
+      .then((data) => {
+        // Update the date state with the fetched date
+        setDate(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching date:', error);
+      });
+  }, []);
   const delayedFetchSchoolData = useRef(
     debounce((value) => {
       fetchSchoolData(value);
-    }, 5000)
+    }, 1400)
   ).current;
 
   const fetchSchoolData = async (udiseCode) => {
@@ -69,7 +79,7 @@ const Form = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching school data:', error);
+      console.error('Error fetching teacher data:', error);
     } finally {
       setLoading(false);
     }
@@ -113,14 +123,29 @@ const Form = () => {
   }, [formData.enrollmentClass3, formData.SkilledStudentsClass3, formData.MediumStudentsClass3]);
   const handleSubmit = async (e) => {
     e.preventDefault();
+  try {
     setLoading(true);
-  
-    try {
+    // Check for duplicate registrationNumber and ticketNumber before proceeding
+    const duplicateCheckResponse = await axios.get(
+      "https://script.google.com/macros/s/AKfycbwh6MxnVWre9TenJZze6UroUf93zQbeEL2N8QYxJKDBaFGouhwyrV2iZ1b9JrDeKt8qmA/exec?sheet=Sheet1",
+      { params: formData }
+    );
+
+    if (duplicateCheckResponse.data && duplicateCheckResponse.data.error === "Duplicate udiseCode") {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Data Already Saved",
+        confirmButtonText: "OK",
+      });
+    } 
+    else {
+      // Proceed with form submission
+      console.log({ data: formData });
       const submitResponse = await axios.get(
-        "https://script.google.com/macros/s/AKfycby1LX71ElGTPGiwexhUiWakAJ6uZwH5XbnXM0G4fVldDjtE-LaC4ZmsfwsGCJg20vyPXQ/exec?sheet=Sheet1",
+        "https://script.google.com/macros/s/AKfycbwh6MxnVWre9TenJZze6UroUf93zQbeEL2N8QYxJKDBaFGouhwyrV2iZ1b9JrDeKt8qmA/exec?sheet=Sheet1",
         { params: formData }
       );
-        console.log({ params: formData });
       if (submitResponse.status === 200) {
         setFormData({
           udiseCode: '',
@@ -139,30 +164,30 @@ const Form = () => {
           MediumStudentsClass3: '',
           StrugglingStudentsClass3: '',
         });
-  
+
         Swal.fire({
           title: '<strong>Data<u> Saved</u></strong>',
           icon: 'success',
           // html: 'You must bring your <b>physical ticket</b> to the event.',
           showCloseButton: true,
-          showCancelButton: true,
           focusConfirm: false,
           confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
           confirmButtonAriaLabel: 'Thumbs up, great!',
         });
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Data not saved. Please try again.",
-        confirmButtonText: "OK",
-      });
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Error submitting form:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Data not saved. Please try again.",
+      confirmButtonText: "OK",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
   
   return (
     <>
@@ -187,7 +212,12 @@ const Form = () => {
                 <h1 style={{ color:'white',fontSize:'30px'}}>निपुण आकांक्षी विद्यालय सूचना</h1>
               </Grid>
               <br></br>
-        <Paper elevation={3} style={{ background: 'rgba(16,13,37,0.9' }} >
+              <Grid item xs={12} style={{ textAlign: 'center' }}>
+
+                <p style={{ color:'white',fontSize:'20px'}}>Date: {date}</p>
+              </Grid>
+              <br></br>
+        <Paper elevation={3} style={{ background: 'rgba(16,13,37,0.7' }} >
           <form ref={formRef}
           onSubmit={handleSubmit} style={{ opacity: loading ? 0.5 : 1,}}>
             <Grid container spacing={2} justifyContent="center" alignItems="center">
@@ -199,6 +229,7 @@ const Form = () => {
                   autoComplete="off"
                   value={formData.udiseCode}
                   onChange={handleChange}
+                  required
                 />
               </Grid>
               <Grid item xs={12}>
@@ -235,6 +266,11 @@ const Form = () => {
                   autoComplete="off"
                   value={formData.enrollmentClass1}
                   onChange={handleChange}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
+                  required
                  
                 />
               </Grid>
@@ -245,7 +281,12 @@ const Form = () => {
                   fullWidth
                   autoComplete="off"
                   value={formData.SkilledStudentsClass1}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
                   onChange={handleChange}
+                  required
                  
                 />
               </Grid>
@@ -256,7 +297,12 @@ const Form = () => {
                   fullWidth
                   autoComplete="off"
                   value={formData.MediumStudentsClass1}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
                   onChange={handleChange}
+                  required
                 />
               </Grid>
               <Grid item xs={12}>
@@ -270,6 +316,7 @@ const Form = () => {
                     readOnly: true,
                   }}
                   onChange={handleChange}
+                  required
         
                 />
               </Grid>
@@ -280,7 +327,12 @@ const Form = () => {
                   fullWidth
                   autoComplete="off"
                   value={formData.enrollmentClass2}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
                   onChange={handleChange}
+                  required
                  
                  
                 />
@@ -293,6 +345,11 @@ const Form = () => {
                   autoComplete="off"
                   value={formData.SkilledStudentsClass2}
                   onChange={handleChange}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
+                  required
                  
                 
                 />
@@ -305,6 +362,11 @@ const Form = () => {
                   autoComplete="off"
                   value={formData.MediumStudentsClass2}
                   onChange={handleChange}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
+                  required
                  
                 />
               </Grid>
@@ -319,6 +381,7 @@ const Form = () => {
                     readOnly: true,
                   }}
                   onChange={handleChange}
+                  required
                 
                 />
               </Grid>
@@ -330,6 +393,11 @@ const Form = () => {
                   autoComplete="off"
                   value={formData.enrollmentClass3}
                   onChange={handleChange}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
+                  required
                  
                 />
               </Grid>
@@ -340,7 +408,12 @@ const Form = () => {
                   fullWidth
                   autoComplete="off"
                   value={formData.SkilledStudentsClass3}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
                   onChange={handleChange}
+                  required
                 />
               </Grid>
               <Grid item xs={12}>
@@ -350,7 +423,12 @@ const Form = () => {
                   fullWidth
                   autoComplete="off"
                   value={formData.MediumStudentsClass3}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
                   onChange={handleChange}
+                  required
                 />
               </Grid>
               <Grid item xs={12}>
@@ -364,6 +442,7 @@ const Form = () => {
                     readOnly: true,
                   }}
                   onChange={handleChange}
+                  required
                 />
               </Grid>
               <Grid item xs={12} style={{ textAlign: 'center' }}>
@@ -385,10 +464,9 @@ const Form = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              background: 'rgba(255, 255, 255, 0)', // Semi-transparent white background
+              background: 'rgba(255, 255, 255, 0)',
             }}
           >
-
             <CircularProgress />
           </div>
         )}
