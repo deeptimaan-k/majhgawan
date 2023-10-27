@@ -117,7 +117,7 @@ const Form = () => {
   
     try {
       const submitResponse = await axios.get(
-        "https://script.google.com/macros/s/AKfycbwdF0usvEOE0-G9YzQ4UAZJQ1e_AvY46A0kNiuYrjlr9HlHKjhfhUpCeuoK00Jm6-EArA/exec?sheet=Sheet1",
+        "https://script.google.com/macros/s/AKfycbzF8X3SmKtNaQOQXbuc8TJC6sdvKXhnYTUsetWiM4pTUYPtLJGI5BgGLW0ZtqR7uN7b/exec?sheet=Sheet1",
         { params: formData }
       );
         console.log({ params: formData });
@@ -141,7 +141,7 @@ const Form = () => {
         });
   
         Swal.fire({
-          title: '<strong>Data<u>Submitted</u></strong>',
+          title: '<strong>Data<u> Saved</u></strong>',
           icon: 'success',
           // html: 'You must bring your <b>physical ticket</b> to the event.',
           showCloseButton: true,
