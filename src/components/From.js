@@ -117,7 +117,7 @@ const Form = () => {
   
     try {
       const submitResponse = await axios.get(
-        "https://script.google.com/macros/s/AKfycbzF8X3SmKtNaQOQXbuc8TJC6sdvKXhnYTUsetWiM4pTUYPtLJGI5BgGLW0ZtqR7uN7b/exec?sheet=Sheet1",
+        "https://script.google.com/macros/s/AKfycby1LX71ElGTPGiwexhUiWakAJ6uZwH5XbnXM0G4fVldDjtE-LaC4ZmsfwsGCJg20vyPXQ/exec?sheet=Sheet1",
         { params: formData }
       );
         console.log({ params: formData });
