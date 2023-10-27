@@ -127,7 +127,7 @@ const Form = () => {
     setLoading(true);
     // Check for duplicate registrationNumber and ticketNumber before proceeding
     const duplicateCheckResponse = await axios.get(
-      "https://script.google.com/macros/s/AKfycbwEyk9Z8vqJNNmoepqiiuvWb512CpZbjo76qe6Q2kezM-0a9rH33NKwnedqaWMjYzl4-A/exec?sheet=Sheet1",
+      "https://script.google.com/macros/s/AKfycbwrbp9MVm1UuFzWpuxN9RktyYVf-C9fFRKxUAwF_9uBcT8Iws0hlIsJlAytdcYYyiLpIw/exec?sheet=Sheet1",
       { params: formData }
     );
 
@@ -143,7 +143,7 @@ const Form = () => {
       // Proceed with form submission
       console.log({ data: formData });
       const submitResponse = await axios.get(
-        "https://script.google.com/macros/s/AKfycbwEyk9Z8vqJNNmoepqiiuvWb512CpZbjo76qe6Q2kezM-0a9rH33NKwnedqaWMjYzl4-A/exec?sheet=Sheet1",
+        "https://script.google.com/macros/s/AKfycbwrbp9MVm1UuFzWpuxN9RktyYVf-C9fFRKxUAwF_9uBcT8Iws0hlIsJlAytdcYYyiLpIw/exec?sheet=Sheet1",
         { params: formData }
       );
       if (submitResponse.status === 200) {
