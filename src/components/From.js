@@ -10,10 +10,13 @@ import { debounce } from 'lodash';
 import Swal from "sweetalert2";
 const Form = () => {
   const formRef = useRef();
+  const formattedDate = new Date().toLocaleString();
   const [formData, setFormData] = useState({
+    timestamping: formattedDate,
     udiseCode: '',
     nyayPanchayat: '',
     schoolName: '',
+    ehrmsCode:'',
     enrollmentClass1: '',
     SkilledStudentsClass1: '',
     MediumStudentsClass1: '',
@@ -33,6 +36,29 @@ const Form = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+  // Add a handler for the udiseCode field
+const handleUdiseCodeChange = (e) => {
+  const { value } = e.target;
+  setFormData((prevData) => ({
+    ...prevData,
+    udiseCode: value,
+    nyayPanchayat: '', // Clear nyayPanchayat
+    schoolName: '', // Clear schoolName
+  }));
+};
+
+// ...
+
+{/* <TextField
+  label="यू-डाइस कोड"
+  name="udiseCode"
+  fullWidth
+  autoComplete="off"
+  value={formData.udiseCode}
+  onChange={handleUdiseCodeChange} // Update the udiseCode and clear other fields
+  required
+/> */}
+
   useEffect(() => {
     // Make a GET request to fetch the date from the Google Apps Script web app
     fetch('https://script.google.com/macros/s/AKfycbwQ7IGod42FO8O-6VzbPK57Xzlc1JeRRDGntTNkuHbXApapKV2YY3ZEfA2HXGC19PXZ/exec')
@@ -45,6 +71,7 @@ const Form = () => {
         console.error('Error fetching date:', error);
       });
   }, []);
+
   const delayedFetchSchoolData = useRef(
     debounce((value) => {
       fetchSchoolData(value);
@@ -53,38 +80,40 @@ const Form = () => {
 
   const fetchSchoolData = async (udiseCode) => {
     try {
+      // Reset nyayPanchayat and schoolName to empty values
+      setFormData((prevData) => ({
+        ...prevData,
+        nyayPanchayat: '',
+        schoolName: '',
+      }));
       setLoading(true);
+      
       // Fetch school data based on UDISE CODE
       const udiseResponse = await axios.get(
         `https://script.google.com/macros/s/AKfycbzN06o791d2gvETeUWqpgMFeXVVkwQ2S894JrRSGm1CN4cu0EBdTsZbgtiXwBdQpweH/exec?sheet=BlockData&udiseCode=${udiseCode}`
       );
-
+  
       if (udiseResponse.data.data.length > 0) {
         const schoolData = udiseResponse.data.data[0];
         const nyayPanchayat = schoolData.nyayPanchayat;
         const schoolName = schoolData.schoolName;
-
+  
         // Update the state with school data
         setFormData((prevData) => ({
           ...prevData,
           nyayPanchayat,
           schoolName,
         }));
-      } else {
-        // Handle case where school data is not found
-        setFormData((prevData) => ({
-          ...prevData,
-          nyayPanchayat: '',
-          schoolName: '',
-        }));
       }
     } catch (error) {
-      console.error('Error fetching teacher data:', error);
+      console.error('Error fetching school data:', error);
     } finally {
       setLoading(false);
     }
   };
+  
 
+  
 
   useEffect(() => {
     if (formData.udiseCode) {
@@ -96,98 +125,145 @@ const Form = () => {
     const skilled = parseInt(formData.SkilledStudentsClass1, 10) || 0;
     const medium = parseInt(formData.MediumStudentsClass1, 10) || 0;
     const struggling = enrollment - (skilled + medium);
-    setFormData((prevData) => ({
-      ...prevData,
-      StrugglingStudentsClass1: struggling.toString(),
-    }));
+  
+    if (struggling < 0) {
+      alert('Value is not correct');
+      setFormData((prevData) => ({
+        ...prevData,
+        SkilledStudentsClass1:'',
+        MediumStudentsClass1:'',
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        StrugglingStudentsClass1: struggling.toString(),
+      }));
+    }
   }, [formData.enrollmentClass1, formData.SkilledStudentsClass1, formData.MediumStudentsClass1]);
+  
   useEffect(() => {
     const enrollment = parseInt(formData.enrollmentClass2, 10) || 0;
     const skilled = parseInt(formData.SkilledStudentsClass2, 10) || 0;
     const medium = parseInt(formData.MediumStudentsClass2, 10) || 0;
     const struggling = enrollment - (skilled + medium);
-    setFormData((prevData) => ({
-      ...prevData,
-      StrugglingStudentsClass2: struggling.toString(),
-    }));
+  
+    if (struggling < 0) {
+      alert('Value is not correct');
+      // Set the input value to an empty string
+      setFormData((prevData) => ({
+        ...prevData,
+        SkilledStudentsClass2:'',
+        MediumStudentsClass2:'',
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        StrugglingStudentsClass2: struggling.toString(),
+      }));
+    }
   }, [formData.enrollmentClass2, formData.SkilledStudentsClass2, formData.MediumStudentsClass2]);
+  
+  
+  
   useEffect(() => {
     const enrollment = parseInt(formData.enrollmentClass3, 10) || 0;
     const skilled = parseInt(formData.SkilledStudentsClass3, 10) || 0;
     const medium = parseInt(formData.MediumStudentsClass3, 10) || 0;
     const struggling = enrollment - (skilled + medium);
-    setFormData((prevData) => ({
-      ...prevData,
-      StrugglingStudentsClass3: struggling.toString(),
-    }));
-  }, [formData.enrollmentClass3, formData.SkilledStudentsClass3, formData.MediumStudentsClass3]);
+  
+    if (struggling < 0) {
+      alert('Value is not correct');
+      setFormData((prevData) => ({
+        ...prevData,
+        SkilledStudentsClass3:'',
+        MediumStudentsClass3:'',
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        StrugglingStudentsClass3: struggling.toString(),
+      }));
+    }
+  }, [formData.enrollmentClass3, formData.SkilledStudentsClass3, formData.MediumStudentsClass3]);  
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  try {
-    setLoading(true);
-    // Check for duplicate registrationNumber and ticketNumber before proceeding
-    const duplicateCheckResponse = await axios.get(
-      "https://script.google.com/macros/s/AKfycbwrbp9MVm1UuFzWpuxN9RktyYVf-C9fFRKxUAwF_9uBcT8Iws0hlIsJlAytdcYYyiLpIw/exec?sheet=Sheet1",
-      { params: formData }
-    );
-
-    if (duplicateCheckResponse.data && duplicateCheckResponse.data.error === "Duplicate udiseCode") {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Data Already Saved",
-        confirmButtonText: "OK",
-      });
-    } 
-    else {
-      // Proceed with form submission
-      console.log({ data: formData });
-      const submitResponse = await axios.get(
-        "https://script.google.com/macros/s/AKfycbwrbp9MVm1UuFzWpuxN9RktyYVf-C9fFRKxUAwF_9uBcT8Iws0hlIsJlAytdcYYyiLpIw/exec?sheet=Sheet1",
-        { params: formData }
-      );
-      if (submitResponse.status === 200) {
-        setFormData({
-          udiseCode: '',
-          nyayPanchayat: '',
-          schoolName: '',
-          enrollmentClass1: '',
-          SkilledStudentsClass1: '',
-          MediumStudentsClass1: '',
-          StrugglingStudentsClass1: '',
-          enrollmentClass2: '',
-          SkilledStudentsClass2: '',
-          MediumStudentsClass2: '',
-          StrugglingStudentsClass2: '',
-          enrollmentClass3: '',
-          SkilledStudentsClass3: '',
-          MediumStudentsClass3: '',
-          StrugglingStudentsClass3: '',
-        });
-
+    if (formData.nyayPanchayat === '' || formData.schoolName === '') {
+      // Show an alert
+      alert('Please fill correct UDISE CODE');
+    } else {
+      const dataWithTimestamp = {
+        ...formData,
+        timestamping: new Date(),
+      };
+      try {
+        setLoading(true);
+        // Check for duplicate registrationNumber and ticketNumber before proceeding
+        const duplicateCheckResponse = await axios.get(
+          "https://script.google.com/macros/s/AKfycbxBKFk_P0A0GJCDPqwkg943i2r1I2haN6tN9hFU2dbOpSILW8tb_-IKFmGvqKd_eNc3bQ/exec?sheet=Response",
+          { params: dataWithTimestamp }
+        );
+  
+        if (duplicateCheckResponse.data && duplicateCheckResponse.data.error === "Duplicate udiseCode") {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Data Already Saved",
+            confirmButtonText: "OK",
+          });
+        } 
+        else {
+          // Proceed with form submission
+          console.log({ data: formData });
+          const submitResponse = await axios.get(
+            "https://script.google.com/macros/s/AKfycbxBKFk_P0A0GJCDPqwkg943i2r1I2haN6tN9hFU2dbOpSILW8tb_-IKFmGvqKd_eNc3bQ/exec?sheet=Response",
+            { params: dataWithTimestamp }
+          );
+          if (submitResponse.status === 200) {
+            setFormData({
+              udiseCode: '',
+              nyayPanchayat: '',
+              ehrmsCode:'',
+              schoolName: '',
+              enrollmentClass1: '',
+              SkilledStudentsClass1: '',
+              MediumStudentsClass1: '',
+              StrugglingStudentsClass1: '',
+              enrollmentClass2: '',
+              SkilledStudentsClass2: '',
+              MediumStudentsClass2: '',
+              StrugglingStudentsClass2: '',
+              enrollmentClass3: '',
+              SkilledStudentsClass3: '',
+              MediumStudentsClass3: '',
+              StrugglingStudentsClass3: '',
+            });
+  
+            Swal.fire({
+              title: '<strong>Data<u> Saved</u></strong>',
+              icon: 'success',
+              showCloseButton: true,
+              focusConfirm: false,
+              confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
+              confirmButtonAriaLabel: 'Thumbs up, great!',
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error);
         Swal.fire({
-          title: '<strong>Data<u> Saved</u></strong>',
-          icon: 'success',
-          // html: 'You must bring your <b>physical ticket</b> to the event.',
-          showCloseButton: true,
-          focusConfirm: false,
-          confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
-          confirmButtonAriaLabel: 'Thumbs up, great!',
+          icon: "error",
+          title: "Error",
+          text: "Data not saved. Please try again.",
+          confirmButtonText: "OK",
         });
+      } finally {
+        setLoading(false);
       }
     }
-  } catch (error) {
-    console.error("Error submitting form:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Data not saved. Please try again.",
-      confirmButtonText: "OK",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+  
   
   return (
     <>
@@ -214,7 +290,7 @@ const Form = () => {
               <br></br>
               <Grid item xs={12} style={{ textAlign: 'center' }}>
 
-                <p style={{ color:'white',fontSize:'20px'}}>Date: {date}</p>
+                <p style={{ color:'white',fontSize:'20px'}}>{date}</p>
               </Grid>
               <br></br>
         <Paper elevation={3} style={{ background: 'rgba(16,13,37,0.7' }} >
@@ -228,7 +304,7 @@ const Form = () => {
                   fullWidth
                   autoComplete="off"
                   value={formData.udiseCode}
-                  onChange={handleChange}
+                  onChange={handleUdiseCodeChange}
                   required
                 />
               </Grid>
@@ -243,6 +319,7 @@ const Form = () => {
                   }}
                   value={formData.nyayPanchayat}
                   onChange={handleChange}
+                  required
                 />
               </Grid>
               <Grid item xs={12}>
@@ -256,6 +333,22 @@ const Form = () => {
                   }}
                   value={formData.schoolName}
                   onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+              <TextField
+                  label="प्रधान अध्यापक EHRMS CODE"
+                  name="ehrmsCode"
+                  fullWidth
+                  autoComplete="off"
+                  value={formData.ehrmsCode}
+                  onChange={handleChange}
+                  inputProps={{
+                    type: 'number', // Set the input type to "number"
+                    pattern: '[0-9]*', // This pattern allows only numeric input
+                  }}
+                  required
                 />
               </Grid>
               <Grid item xs={12}>
